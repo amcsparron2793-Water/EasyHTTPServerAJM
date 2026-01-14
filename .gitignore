@@ -3,4 +3,5 @@ __pycache__
 /.idea/
 /venv/
 /dist/
+/old_dist/
 /*.egg-info/

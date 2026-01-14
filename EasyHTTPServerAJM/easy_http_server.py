@@ -1,4 +1,4 @@
-from _version import __version__
+from EasyHTTPServerAJM._version import __version__
 import argparse
 import http.server
 import socketserver
