@@ -71,7 +71,7 @@ class EasyHTTPServer:
         """Start the HTTP server and block until interrupted (Ctrl+C)."""
         chdir(self.directory)
 
-        with socketserver.TCPServer((self.host, self.port), self.handler_class) as httpd:
+        with socketserver.ThreadingTCPServer((self.host, self.port), self.handler_class) as httpd:
             self._httpd = httpd
             print(f"EasyHTTPServerAJM v{__version__}")
             # noinspection HttpUrlsUsage
