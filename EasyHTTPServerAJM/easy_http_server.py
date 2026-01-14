@@ -1,8 +1,10 @@
+from typing import Union, Optional
+
 from EasyHTTPServerAJM._version import __version__
 import argparse
-import http.server
+from http.server import SimpleHTTPRequestHandler
 import socketserver
-import os
+from os import chdir
 from pathlib import Path
 
 
@@ -16,15 +18,23 @@ class EasyHTTPServer:
     - Intended for quick, local file sharing on trusted networks.
     """
 
-    def __init__(self, directory: Path | str = ".", host: str = "0.0.0.0", port: int = 8000) -> None:
-        self.directory = Path(directory)
-        self.host = host
-        self.port = int(port)
+    DEFAULT_HANDLER_CLASS = SimpleHTTPRequestHandler
+    DEFAULT_PORT = 8000
+    DEFAULT_DIRECTORY = "."
+    DEFAULT_HOST = "0.0.0.0"
+
+    def __init__(self, directory: Optional[Union[Path, str]] = None,
+                 host: Optional[str] = None, port: Optional[int] = None, **kwargs) -> None:
+        self.directory = Path(directory) if directory is not None else self.__class__.DEFAULT_DIRECTORY
+        self.host = host if host is not None else self.__class__.DEFAULT_HOST
+        self.port = int(port) if port is not None else self.__class__.DEFAULT_PORT
+
+        self.handler_class = kwargs.get("handler_class", self.__class__.DEFAULT_HANDLER_CLASS)
 
         if not self.directory.exists() or not self.directory.is_dir():
             raise ValueError(f"{self.directory} is not a valid directory")
 
-        self._httpd: socketserver.TCPServer | None = None
+        self._httpd: Optional[socketserver.TCPServer] = None
 
     @classmethod
     def from_cli(cls) -> "EasyHTTPServer":
@@ -59,13 +69,12 @@ class EasyHTTPServer:
 
     def start(self) -> None:
         """Start the HTTP server and block until interrupted (Ctrl+C)."""
-        os.chdir(self.directory)
+        chdir(self.directory)
 
-        handler_class = http.server.SimpleHTTPRequestHandler
-
-        with socketserver.TCPServer((self.host, self.port), handler_class) as httpd:
+        with socketserver.TCPServer((self.host, self.port), self.handler_class) as httpd:
             self._httpd = httpd
             print(f"EasyHTTPServerAJM v{__version__}")
+            # noinspection HttpUrlsUsage
             print(f"Serving directory {self.directory.resolve()} at http://{self.host}:{self.port}")
             print("Press Ctrl+C to stop.")
             try:
@@ -85,6 +94,6 @@ class EasyHTTPServer:
 
 
 if __name__ == "__main__":
-    # TODO: this
+    # TODO: make both CLI and class-based usage possible
     srv = EasyHTTPServer()
     srv.start()
