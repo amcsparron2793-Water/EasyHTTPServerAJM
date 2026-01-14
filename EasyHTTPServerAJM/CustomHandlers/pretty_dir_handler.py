@@ -8,20 +8,18 @@ import socket
 from typing import Union, Optional
 
 
-class PrettyDirectoryHandler(SimpleHTTPRequestHandler):
+class HTMLTemplateBuilder:
     DEFAULT_HTML_TEMPLATE_PATH = Path('../Misc_Project_Files/templates/directory_page_template.html').resolve()
 
-    def __init__(self, request: socket.SocketType, client_address,
-                 server: BaseServer, html_template_path: Optional[Union[str, Path]] = None):
+    def __init__(self, html_template_path: Optional[Union[str, Path]] = None):
         self._html_template_path = None
 
         self.html_template_path = (html_template_path if html_template_path is not None
                                    else self.__class__.DEFAULT_HTML_TEMPLATE_PATH)
+
         self.enc = None
         self.title = None
         self.displaypath = None
-
-        super().__init__(request, client_address, server)
 
     @property
     def html_template_path(self):
@@ -57,16 +55,23 @@ class PrettyDirectoryHandler(SimpleHTTPRequestHandler):
         template = Template(Path(self.html_template_path).read_text(encoding='utf-8'))
         return template.safe_substitute(context)
 
-    def _build_page_body(self, entries, path, add_to_context: dict = None) -> str:
-        safe_context = self._build_template_safe_context(entries, path, add_to_context)
-        return self._build_body_template(safe_context)
-
     @staticmethod
     def _process_directory_entry(path, name):
         fullname = os.path.join(path, name)
         display = name + ("/" if os.path.isdir(fullname) else "")
         link = escape(display)
         return f"<tr><td><a href='{link}'>{display}</a></td></tr>"
+
+    def build_page_body(self, entries, path, add_to_context: dict = None) -> str:
+        safe_context = self._build_template_safe_context(entries, path, add_to_context)
+        return self._build_body_template(safe_context)
+
+
+class PrettyDirectoryHandler(SimpleHTTPRequestHandler, HTMLTemplateBuilder):
+    def __init__(self, request: socket.SocketType, client_address,
+                 server: BaseServer, html_template_path: Optional[Union[str, Path]] = None):
+        HTMLTemplateBuilder.__init__(self, html_template_path)
+        super().__init__(request, client_address, server)
 
     def list_directory(self, path):
         """Generate a custom HTML directory listing."""
@@ -81,7 +86,7 @@ class PrettyDirectoryHandler(SimpleHTTPRequestHandler):
         self.enc = "utf-8"
         self.title = f"Index of {self.displaypath}"
 
-        page_body = self._build_page_body(entries, path)
+        page_body = self.build_page_body(entries, path)
         encoded = page_body.encode(self.enc, "surrogateescape")
 
         # Send HTTP headers
@@ -89,4 +94,5 @@ class PrettyDirectoryHandler(SimpleHTTPRequestHandler):
         self.send_header("Content-type", f"text/html; charset={self.enc}")
         self.send_header("Content-Length", str(len(encoded)))
         self.end_headers()
-        return self.wfile.write(encoded)
+        self.wfile.write(encoded)
+        return None
