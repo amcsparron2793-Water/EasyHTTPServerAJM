@@ -57,7 +57,7 @@ class PrettyDirectoryHandler(SimpleHTTPRequestHandler):
         template = Template(Path(self.html_template_path).read_text(encoding='utf-8'))
         return template.safe_substitute(context)
 
-    def _build_directory_body(self, entries, path, add_to_context: dict = None) -> str:
+    def _build_page_body(self, entries, path, add_to_context: dict = None) -> str:
         safe_context = self._build_template_safe_context(entries, path, add_to_context)
         return self._build_body_template(safe_context)
 
@@ -81,7 +81,7 @@ class PrettyDirectoryHandler(SimpleHTTPRequestHandler):
         self.enc = "utf-8"
         self.title = f"Index of {self.displaypath}"
 
-        page_body = self._build_directory_body(entries, path)
+        page_body = self._build_page_body(entries, path)
         encoded = page_body.encode(self.enc, "surrogateescape")
 
         # Send HTTP headers
