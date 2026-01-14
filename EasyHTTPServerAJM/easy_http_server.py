@@ -1,6 +1,7 @@
 from typing import Union, Optional
 
 from EasyHTTPServerAJM._version import __version__
+from EasyHTTPServerAJM.CustomHandlers import PrettyDirectoryHandler
 import argparse
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from socketserver import TCPServer
@@ -18,7 +19,7 @@ class EasyHTTPServer:
     - Intended for quick, local file sharing on trusted networks.
     """
 
-    DEFAULT_HANDLER_CLASS = SimpleHTTPRequestHandler
+    DEFAULT_HANDLER_CLASS = PrettyDirectoryHandler#SimpleHTTPRequestHandler
     DEFAULT_PORT = 8000
     DEFAULT_DIRECTORY = "."
     DEFAULT_HOST = "0.0.0.0"
