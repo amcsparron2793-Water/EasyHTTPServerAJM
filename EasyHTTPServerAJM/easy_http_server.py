@@ -25,6 +25,7 @@ class EasyHTTPServer:
 
     def __init__(self, directory: Optional[Union[Path, str]] = None,
                  host: Optional[str] = None, port: Optional[int] = None, **kwargs) -> None:
+
         self.directory = Path(directory) if directory is not None else Path(self.__class__.DEFAULT_DIRECTORY)
         self.host = host if host is not None else self.__class__.DEFAULT_HOST
         self.port = int(port) if port is not None else self.__class__.DEFAULT_PORT
