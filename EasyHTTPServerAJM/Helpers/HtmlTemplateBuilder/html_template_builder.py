@@ -18,6 +18,7 @@ class HTMLTemplateBuilder(AssetHelper):
         self.enc = None
         self.title = None
         self.displaypath = None
+        self.path = None
 
     def _build_directory_rows(self, entries, path):
         table_rows = []

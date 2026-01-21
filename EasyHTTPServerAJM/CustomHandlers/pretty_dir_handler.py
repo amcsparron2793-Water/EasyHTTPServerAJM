@@ -1,21 +1,34 @@
 from http.server import SimpleHTTPRequestHandler
 from html import escape
 from logging import getLogger
-from pathlib import Path
 import os
 from socketserver import BaseServer
 import socket
-from typing import Union, Optional
 from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder import HTMLTemplateBuilder
 
 
-class PrettyDirectoryHandler(SimpleHTTPRequestHandler, HTMLTemplateBuilder):
+class PrettyDirectoryHandler(SimpleHTTPRequestHandler):
     def __init__(self, request: socket.SocketType, client_address,
-                 server: BaseServer, html_template_path: Optional[Union[str, Path]] = None, **kwargs):
+                 server: BaseServer, **kwargs):
         self.logger = kwargs.pop('logger', getLogger(__name__))
-        # TODO: dont make this inherit the TemplateBuilder class, just make it an attr
-        HTMLTemplateBuilder.__init__(self, html_template_path, logger=self.logger)
+        self.html_template_path = kwargs.pop('html_template_path', None)
+        self.template_builder = HTMLTemplateBuilder(self.html_template_path, logger=self.logger)
+        self.template_builder.enc = "utf-8"
+
         super().__init__(request, client_address, server)
+
+    def _setup_template_builder_for_page(self):
+        self.template_builder.displaypath = escape(self.path)
+        self.template_builder.path = self.path
+        self.template_builder.title = f"Index of {self.template_builder.displaypath}"
+        self.logger.debug(f"Setting up template builder for page {self.template_builder.displaypath}")
+
+    def _send_response_code_and_headers(self, encoded):
+        self.send_response(200)
+        self.send_header("Content-type", f"text/html; charset={self.template_builder.enc}")
+        self.send_header("Content-Length", str(len(encoded)))
+        self.end_headers()
+        self.logger.debug(f"Sent headers for {self.template_builder.displaypath}")
 
     def list_directory(self, path):
         """Generate a custom HTML directory listing."""
@@ -28,18 +41,14 @@ class PrettyDirectoryHandler(SimpleHTTPRequestHandler, HTMLTemplateBuilder):
             self.send_error(404, "No permission to list directory")
             return None
 
-        self.displaypath = escape(self.path)
-        self.enc = "utf-8"
-        self.title = f"Index of {self.displaypath}"
+        self._setup_template_builder_for_page()
 
-        page_body = self.build_page_body(entries, path)
-        encoded = page_body.encode(self.enc, "surrogateescape")
+        page_body = self.template_builder.build_page_body(entries, path)
+        encoded = page_body.encode(self.template_builder.enc, "surrogateescape")
 
         # Send HTTP headers
-        self.send_response(200)
-        self.send_header("Content-type", f"text/html; charset={self.enc}")
-        self.send_header("Content-Length", str(len(encoded)))
-        self.end_headers()
+        self._send_response_code_and_headers(encoded)
+
         self.wfile.write(encoded)
-        self.logger.debug(f"Sent directory listing for {self.displaypath}")
+        self.logger.info(f"Sent directory listing for {self.template_builder.displaypath}")
         return None
