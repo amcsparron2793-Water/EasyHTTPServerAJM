@@ -7,6 +7,7 @@ from http.server import ThreadingHTTPServer
 from socketserver import TCPServer
 from os import chdir
 from pathlib import Path
+from EasyHTTPServerAJM import EasyHTTPLogger
 
 
 # TODO: needs logging support
@@ -26,7 +27,8 @@ class EasyHTTPServer:
 
     def __init__(self, directory: Optional[Union[Path, str]] = None,
                  host: Optional[str] = None, port: Optional[int] = None, **kwargs) -> None:
-
+        self.logger = kwargs.get("logger", EasyHTTPLogger(**kwargs)())
+        # self.logger.warning("askjdaskljdjd")
         self.directory = Path(directory) if directory is not None else Path(self.__class__.DEFAULT_DIRECTORY)
         self.host = host if host is not None else self.__class__.DEFAULT_HOST
         self.port = int(port) if port is not None else self.__class__.DEFAULT_PORT
