@@ -4,7 +4,7 @@ from pathlib import Path
 from string import Template
 from typing import Optional, Union
 
-from EasyHTTPServerAJM.Helpers import AssetHelper
+from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder import AssetHelper
 
 
 class HTMLTemplateBuilder(AssetHelper):

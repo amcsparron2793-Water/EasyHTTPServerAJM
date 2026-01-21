@@ -5,7 +5,7 @@ import os
 from socketserver import BaseServer
 import socket
 from typing import Union, Optional
-from EasyHTTPServerAJM.Helpers import HTMLTemplateBuilder
+from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder import HTMLTemplateBuilder
 
 
 class PrettyDirectoryHandler(SimpleHTTPRequestHandler, HTMLTemplateBuilder):
