@@ -1,11 +1,113 @@
+from enum import Enum
 from http.server import SimpleHTTPRequestHandler
 from html import escape
+from logging import getLogger
 from pathlib import Path
 import os
 from string import Template
 from socketserver import BaseServer
 import socket
-from typing import Union, Optional
+from typing import Union, Optional, Tuple
+
+
+class CandidatePathNotSetError(Exception):
+    ...
+
+
+class PathValidationType(Enum):
+    DIR = 'dir'
+    FILE = 'file'
+    HTML = 'html'
+    SVG = 'svg'
+
+
+class _PathValidator:
+    def __init__(self, **kwargs):
+        self.logger = kwargs.get('logger', getLogger(__name__))
+        self._candidate_path = None
+        self._candidate_path_validation_type = None
+
+        self.candidate_path: Optional[Union[str, Path]] = kwargs.get('candidate_path', None)
+        self.candidate_path_validation_type = kwargs.get('candidate_path_validation_type',
+                                                         PathValidationType.FILE)
+
+    @staticmethod
+    def _resolve_path(candidate_path: Union[str, Path]) -> Path:
+        if isinstance(candidate_path, str):
+            candidate_path = Path(candidate_path).resolve()
+        elif isinstance(candidate_path, Path):
+            candidate_path = candidate_path.resolve()
+        else:
+            raise ValueError(f"{candidate_path} is not a valid path")
+        return candidate_path
+
+    @property
+    def candidate_path(self):
+        return self._candidate_path
+
+    @candidate_path.setter
+    def candidate_path(self, value: Union[str, Path]):
+        if value is None:
+            self.logger.warning(f"candidate_path is None, candidate_path must be still be set")
+            self._candidate_path = None
+        else:
+            self._candidate_path = self._resolve_path(value)
+
+    @property
+    def candidate_path_validation_type(self):
+        return self._candidate_path_validation_type
+
+    @candidate_path_validation_type.setter
+    def candidate_path_validation_type(self, value: Union[str, PathValidationType]):
+        self._candidate_path_validation_type = PathValidationType(value)
+
+    @property
+    def is_resolved_to_dir(self) -> bool:
+        self._check_for_path_set()
+        if self.candidate_path.is_dir():
+            return True
+        else:
+            raise ValueError(f"{self.candidate_path} is not a valid directory")
+
+    @property
+    def is_resolved_to_file(self) -> bool:
+        self._check_for_path_set()
+        if self.candidate_path.is_file():
+            return True
+        else:
+            raise ValueError(f"{self.candidate_path} is not a valid file")
+
+    @property
+    def is_resolved_to_html(self) -> bool:
+        self._check_for_path_set()
+        if self.is_resolved_to_file and self.candidate_path.suffix == '.html':
+            return True
+        else:
+            raise ValueError(f"{self.candidate_path} is not a valid html file")
+
+    @property
+    def is_resolved_to_svg(self) -> bool:
+        self._check_for_path_set()
+        if self.is_resolved_to_file and self.candidate_path.suffix == '.svg':
+            return True
+        else:
+            raise ValueError(f"{self.candidate_path} is not a valid svg file")
+
+    def _check_for_path_set(self):
+        if self.candidate_path is None:
+            raise CandidatePathNotSetError("candidate_path must be set before using this class")
+
+    def validate(self):
+        if self.candidate_path_validation_type == PathValidationType.FILE:
+            return self.is_resolved_to_file
+        elif self.candidate_path_validation_type == PathValidationType.DIR:
+            return self.is_resolved_to_dir
+        elif self.candidate_path_validation_type == PathValidationType.HTML:
+            return self.is_resolved_to_html
+        elif self.candidate_path_validation_type == PathValidationType.SVG:
+            return self.is_resolved_to_svg
+        else:
+            raise ValueError(f"{self.candidate_path_validation_type} is not a valid validation type")
 
 
 class _AssetHelper:
@@ -19,78 +121,60 @@ class _AssetHelper:
         self._html_template_path = None
         self._assets_path = None
         self._back_svg_path = None
+        self.path_validator = _PathValidator(**kwargs)
+        self._set_paths(html_template_path, **kwargs)
 
-        self.html_template_path = (html_template_path if html_template_path is not None
-                                   else self.__class__.DEFAULT_HTML_TEMPLATE_PATH)
-        self.assets_path = kwargs.get('assets_path', self.__class__.DEFAULT_ASSETS_PATH)
-        self.back_svg_path = kwargs.get('back_svg_path', self.__class__.DEFAULT_BACK_SVG_PATH)
+    def _set_paths(self, html_template_path: Optional[Union[str, Path]] = None, **kwargs):
+        self.templates_path = (kwargs.get('templates_path', self.__class__.DEFAULT_TEMPLATES_PATH),
+                               PathValidationType.DIR)
+        self.html_template_path = ((html_template_path if html_template_path is not None
+                                    else self.__class__.DEFAULT_HTML_TEMPLATE_PATH), PathValidationType.HTML)
+        self.assets_path = (kwargs.get('assets_path', self.__class__.DEFAULT_ASSETS_PATH), PathValidationType.DIR)
+        self.back_svg_path = (kwargs.get('back_svg_path', self.__class__.DEFAULT_BACK_SVG_PATH), PathValidationType.SVG)
 
-    @staticmethod
-    def _resolve_path(candidate_path: Union[str, Path]) -> Path:
-        if isinstance(candidate_path, str):
-            candidate_path = Path(candidate_path).resolve()
-        elif isinstance(candidate_path, Path):
-            candidate_path = candidate_path.resolve()
-        else:
-            raise ValueError(f"{candidate_path} is not a valid path")
-        return candidate_path
+    def set_validator_paths(self, **kwargs):
+        self.path_validator.candidate_path = kwargs.get('candidate_path', None)
+        self.path_validator.candidate_path_validation_type = kwargs.get('candidate_path_validation_type',
+                                                                        PathValidationType.FILE)
 
-    def _is_resolved_to_dir(self, candidate_path: Union[str, Path]) -> bool:
-        candidate_path = self._resolve_path(candidate_path)
-        if candidate_path.is_dir():
-            return True
-        else:
-            raise ValueError(f"{candidate_path} is not a valid directory")
-
-    def _is_resolved_to_html(self, candidate_path: Union[str, Path]) -> bool:
-        candidate_path = self._resolve_path(candidate_path)
-        if candidate_path.is_file() and candidate_path.suffix == '.html':
-            return True
-        else:
-            raise ValueError(f"{candidate_path} is not a valid html file")
-
-    def _is_resolved_to_svg(self, candidate_path: Union[str, Path]) -> bool:
-        candidate_path = self._resolve_path(candidate_path)
-        if candidate_path.is_file() and candidate_path.suffix == '.svg':
-            return True
-        else:
-            raise ValueError(f"{candidate_path} is not a valid svg file")
+    def _set_property(self, value: Tuple[Union[str, Path], PathValidationType],
+                      private_property_name: str):
+        self.set_validator_paths(candidate_path=value[0],
+                                 candidate_path_validation_type=value[1])
+        if self.path_validator.validate():
+            self.__setattr__(private_property_name, value[0])
 
     @property
     def templates_path(self):
         return self._templates_path
 
     @templates_path.setter
-    def templates_path(self, value: Union[str, Path]):
-        if self._is_resolved_to_dir(value):
-            self._templates_path = self._resolve_path(value)
+    def templates_path(self, value: Tuple[Union[str, Path], PathValidationType]):
+        self._set_property(value, '_templates_path')
 
     @property
     def html_template_path(self):
         return self._html_template_path
 
     @html_template_path.setter
-    def html_template_path(self, value: Union[str, Path]):
-        if self._is_resolved_to_html(value):
-            self._html_template_path = self._resolve_path(value)
+    def html_template_path(self, value: Tuple[Union[str, Path], PathValidationType]):
+        self._set_property(value, '_html_template_path')
 
     @property
     def assets_path(self):
         return self._assets_path
 
     @assets_path.setter
-    def assets_path(self, value: Union[str, Path]):
-        if self._is_resolved_to_dir(value):
-            self._assets_path = self._resolve_path(value)
+    def assets_path(self, value: Tuple[Union[str, Path], PathValidationType]):
+        self._set_property(value, '_assets_path')
 
     @property
     def back_svg_path(self):
         return self._back_svg_path
 
     @back_svg_path.setter
-    def back_svg_path(self, value: Union[str, Path]):
-        if self._is_resolved_to_svg(value):
-            self._back_svg_path = self._resolve_path(value)
+    def back_svg_path(self, value: Tuple[Union[str, Path], PathValidationType]):
+        self._set_property(value, '_back_svg_path')
 
 
 class HTMLTemplateBuilder(_AssetHelper):
@@ -110,14 +194,9 @@ class HTMLTemplateBuilder(_AssetHelper):
         return table_rows
 
     def _build_template_safe_context(self, entries, path, add_to_context: dict = None):
-
         # signature_html = '<br>'.join(self.email_signature.split('\n'))
         parent_dir_link = "<tr><td><a href='..'>..</a></td></tr>" if self.path not in ("/", "") else ""
         rows = '\n'.join(self._build_directory_rows(entries, path))
-        # full_context = {'fast_update_html': fast_update_html,
-        #                 'manager_contact_html': manager_contact_html,
-        #                 'signature_html': signature_html,
-        #                 'tab_char': self.tab_char}
         full_context = {'title': self.title,
                         'enc': self.enc,
                         'parent_dir_link': parent_dir_link,
