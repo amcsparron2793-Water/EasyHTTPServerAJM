@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Union, Optional
 
 from EasyHTTPServerAJM._version import __version__
@@ -27,8 +28,10 @@ class EasyHTTPServer:
 
     def __init__(self, directory: Optional[Union[Path, str]] = None,
                  host: Optional[str] = None, port: Optional[int] = None, **kwargs) -> None:
+        self._runtime = None
         self.logger = kwargs.get("logger", EasyHTTPLogger(**kwargs)())
-        # self.logger.warning("askjdaskljdjd")
+        self.html_template_path = kwargs.get("html_template_path", None)
+
         self.directory = Path(directory) if directory is not None else Path(self.__class__.DEFAULT_DIRECTORY)
         self.host = host if host is not None else self.__class__.DEFAULT_HOST
         self.port = int(port) if port is not None else self.__class__.DEFAULT_PORT
@@ -39,12 +42,21 @@ class EasyHTTPServer:
             raise ValueError(f"{self.directory} is not a valid directory")
 
         self._httpd: Optional[TCPServer] = None
+        self.start_time: Optional[datetime] = None
 
     @classmethod
     def from_cli(cls) -> "EasyHTTPServer":
         """Create an EasyHTTPServer instance using command-line arguments."""
         args = cls._parse_args()
         return cls(directory=args.directory, host=args.host, port=args.port)
+
+    @property
+    def runtime(self):
+        if self.start_time:
+            self._runtime = (datetime.now() - self.start_time)
+        else:
+            self._runtime = 0
+        return self._runtime
 
     @staticmethod
     def _parse_args() -> argparse.Namespace:
@@ -71,20 +83,31 @@ class EasyHTTPServer:
         )
         return parser.parse_args()
 
+    def _handler_factory(self, request, client_address, server):
+        return self.handler_class(request,
+                                  client_address,
+                                  server,
+                                  directory=self.directory,
+                                  logger=self.logger,
+                                  html_template_path=self.html_template_path)
+
     def start(self) -> None:
         """Start the HTTP server and block until interrupted (Ctrl+C)."""
         chdir(self.directory)
 
-        with ThreadingHTTPServer((self.host, self.port), self.handler_class) as httpd:
+        # noinspection PyTypeChecker
+        with ThreadingHTTPServer((self.host, self.port), self._handler_factory) as httpd:
             self._httpd = httpd
-            print(f"EasyHTTPServerAJM v{__version__}")
+            self.logger.info(f"EasyHTTPServerAJM v{__version__}", print_msg=True)
             # noinspection HttpUrlsUsage
-            print(f"Serving directory {self.directory.resolve()} at http://{self.host}:{self.port}")
+            self.logger.info(f"Serving directory {self.directory.resolve()} at http://{self.host}:{self.port}",
+                             print_msg=True)
             print("Press Ctrl+C to stop.")
             try:
+                self.start_time = datetime.now()
                 httpd.serve_forever()
             except KeyboardInterrupt:
-                print("\nShutting down server...")
+                self.logger.warning(f"Shutting down server (ran for {self.runtime}).")
 
     def stop(self) -> None:
         """

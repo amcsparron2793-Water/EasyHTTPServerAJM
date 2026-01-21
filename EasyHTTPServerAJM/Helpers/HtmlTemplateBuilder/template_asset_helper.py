@@ -1,3 +1,4 @@
+from logging import getLogger
 from pathlib import Path
 from typing import Optional, Union, Tuple
 
@@ -11,11 +12,12 @@ class AssetHelper:
     DEFAULT_BACK_SVG_PATH = Path(DEFAULT_ASSETS_PATH, 'BackBoxWithText.svg').resolve()
 
     def __init__(self, html_template_path: Optional[Union[str, Path]] = None, **kwargs):
+        self.logger = kwargs.pop('logger', getLogger(__name__))
         self._templates_path = None
         self._html_template_path = None
         self._assets_path = None
         self._back_svg_path = None
-        self.path_validator = PathValidator(**kwargs)
+        self.path_validator = PathValidator(**kwargs, logger=self.logger)
         self._set_paths(html_template_path, **kwargs)
 
     def _set_paths(self, html_template_path: Optional[Union[str, Path]] = None, **kwargs):
@@ -25,11 +27,14 @@ class AssetHelper:
                                     else self.__class__.DEFAULT_HTML_TEMPLATE_PATH), PathValidationType.HTML)
         self.assets_path = (kwargs.get('assets_path', self.__class__.DEFAULT_ASSETS_PATH), PathValidationType.DIR)
         self.back_svg_path = (kwargs.get('back_svg_path', self.__class__.DEFAULT_BACK_SVG_PATH), PathValidationType.SVG)
+        self.logger.debug("Paths set")
 
     def set_validator_paths(self, **kwargs):
         self.path_validator.candidate_path = kwargs.get('candidate_path', None)
         self.path_validator.candidate_path_validation_type = kwargs.get('candidate_path_validation_type',
                                                                         PathValidationType.FILE)
+        self.logger.debug(f"SET Candidate path: {self.path_validator.candidate_path} "
+                          f"with validation type: {self.path_validator.candidate_path_validation_type}")
 
     def _set_property(self, value: Tuple[Union[str, Path], PathValidationType],
                       private_property_name: str):
@@ -37,6 +42,7 @@ class AssetHelper:
                                  candidate_path_validation_type=value[1])
         if self.path_validator.validate():
             self.__setattr__(private_property_name, value[0])
+            self.logger.debug(f"{private_property_name} set to {value[0]}")
 
     @property
     def templates_path(self):

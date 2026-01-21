@@ -1,5 +1,6 @@
 import os
 from html import escape
+from logging import getLogger
 from pathlib import Path
 from string import Template
 from typing import Optional, Union
@@ -9,7 +10,8 @@ from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder import AssetHelper
 
 class HTMLTemplateBuilder(AssetHelper):
     def __init__(self, html_template_path: Optional[Union[str, Path]] = None, **kwargs):
-        super().__init__(html_template_path, **kwargs)
+        self.logger = kwargs.pop('logger', getLogger(__name__))
+        super().__init__(html_template_path, logger=self.logger, **kwargs)
         self.back_svg = Path(self.back_svg_path).read_text(encoding='utf-8')
 
         # enc = encoding for the HTML page

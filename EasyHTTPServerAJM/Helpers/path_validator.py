@@ -36,7 +36,7 @@ class PathValidator:
     @candidate_path.setter
     def candidate_path(self, value: Union[str, Path]):
         if value is None:
-            self.logger.warning(f"candidate_path is None, candidate_path must be still be set")
+            self.logger.debug(f"candidate_path is None, candidate_path must be still be set")
             self._candidate_path = None
         else:
             self._candidate_path = self._resolve_path(value)
