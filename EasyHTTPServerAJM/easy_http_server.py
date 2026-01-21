@@ -1,9 +1,10 @@
 from typing import Union, Optional
 
 from EasyHTTPServerAJM._version import __version__
+from EasyHTTPServerAJM.CustomHandlers import PrettyDirectoryHandler
 import argparse
-from http.server import SimpleHTTPRequestHandler
-import socketserver
+from http.server import ThreadingHTTPServer
+from socketserver import TCPServer
 from os import chdir
 from pathlib import Path
 
@@ -18,14 +19,15 @@ class EasyHTTPServer:
     - Intended for quick, local file sharing on trusted networks.
     """
 
-    DEFAULT_HANDLER_CLASS = SimpleHTTPRequestHandler
+    DEFAULT_HANDLER_CLASS = PrettyDirectoryHandler#SimpleHTTPRequestHandler
     DEFAULT_PORT = 8000
     DEFAULT_DIRECTORY = "."
     DEFAULT_HOST = "0.0.0.0"
 
     def __init__(self, directory: Optional[Union[Path, str]] = None,
                  host: Optional[str] = None, port: Optional[int] = None, **kwargs) -> None:
-        self.directory = Path(directory) if directory is not None else self.__class__.DEFAULT_DIRECTORY
+
+        self.directory = Path(directory) if directory is not None else Path(self.__class__.DEFAULT_DIRECTORY)
         self.host = host if host is not None else self.__class__.DEFAULT_HOST
         self.port = int(port) if port is not None else self.__class__.DEFAULT_PORT
 
@@ -34,7 +36,7 @@ class EasyHTTPServer:
         if not self.directory.exists() or not self.directory.is_dir():
             raise ValueError(f"{self.directory} is not a valid directory")
 
-        self._httpd: Optional[socketserver.TCPServer] = None
+        self._httpd: Optional[TCPServer] = None
 
     @classmethod
     def from_cli(cls) -> "EasyHTTPServer":
@@ -71,7 +73,7 @@ class EasyHTTPServer:
         """Start the HTTP server and block until interrupted (Ctrl+C)."""
         chdir(self.directory)
 
-        with socketserver.TCPServer((self.host, self.port), self.handler_class) as httpd:
+        with ThreadingHTTPServer((self.host, self.port), self.handler_class) as httpd:
             self._httpd = httpd
             print(f"EasyHTTPServerAJM v{__version__}")
             # noinspection HttpUrlsUsage

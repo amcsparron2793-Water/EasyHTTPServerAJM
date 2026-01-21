@@ -1,1 +1,2 @@
+from EasyHTTPServerAJM import CustomHandlers, Helpers
 from EasyHTTPServerAJM.easy_http_server import EasyHTTPServer

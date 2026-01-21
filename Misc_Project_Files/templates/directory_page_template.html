@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset=$enc>
+        <title>$title</title>
+        <style>
+            body { font-family: sans-serif; margin: 2rem; }
+            table { border-collapse: collapse; }
+            th td { padding: 0.25rem 0.5rem; }
+            tr:nth-child(even) { background: #f4f4f4; }
+            a { text-decoration: none; }
+        </style>
+    </head>
+    <body>
+        <h1>$title</h1>
+        <table>
+            <tr><th>Name</th></tr>
+            $parent_dir_link
+            $rows
+        </table>
+    <br>
+    <br>
+    <a href="#" onclick="history.back(); return false;">$back_svg</a>
+    </body>
+</html>
