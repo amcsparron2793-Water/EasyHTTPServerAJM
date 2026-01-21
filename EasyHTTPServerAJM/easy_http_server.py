@@ -3,7 +3,7 @@ from typing import Union, Optional
 from EasyHTTPServerAJM._version import __version__
 from EasyHTTPServerAJM.CustomHandlers import PrettyDirectoryHandler
 import argparse
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from http.server import ThreadingHTTPServer
 from socketserver import TCPServer
 from os import chdir
 from pathlib import Path

@@ -23,7 +23,7 @@ def get_property(prop, project):
 setup(
     name=project_name,
     version=get_property('__version__', project_name),
-    packages=['EasyHTTPServerAJM'],
+    packages=['EasyHTTPServerAJM', 'EasyHTTPServerAJM.Helpers', 'EasyHTTPServerAJM.CustomHandlers'],
     url='https://github.com/amcsparron2793-Water/EasyHTTPServerAJM',
     download_url=f'https://github.com/amcsparron2793-Water/EasyHTTPServerAJM/archive/refs/tags/{get_property("__version__", project_name)}.tar.gz',
     keywords=[],
