@@ -9,14 +9,10 @@ from typing import Union, Optional
 
 
 class _AssetHelper:
-    ...
-
-
-class HTMLTemplateBuilder:
     DEFAULT_ASSETS_PATH = Path('../Misc_Project_Files/assets').resolve()
     DEFAULT_TEMPLATES_PATH = Path('../Misc_Project_Files/templates').resolve()
     DEFAULT_HTML_TEMPLATE_PATH = Path(DEFAULT_TEMPLATES_PATH, 'directory_page_template.html').resolve()
-    DEFAULT_BACK_SVG_PATH = Path(DEFAULT_ASSETS_PATH, 'back.svg').resolve()
+    DEFAULT_BACK_SVG_PATH = Path(DEFAULT_ASSETS_PATH, 'BackBoxWithText.svg').resolve()
 
     def __init__(self, html_template_path: Optional[Union[str, Path]] = None, **kwargs):
         self._templates_path = None
@@ -28,12 +24,6 @@ class HTMLTemplateBuilder:
                                    else self.__class__.DEFAULT_HTML_TEMPLATE_PATH)
         self.assets_path = kwargs.get('assets_path', self.__class__.DEFAULT_ASSETS_PATH)
         self.back_svg_path = kwargs.get('back_svg_path', self.__class__.DEFAULT_BACK_SVG_PATH)
-        self.back_svg = Path(self.back_svg_path).read_text(encoding='utf-8')
-
-        # enc = encoding for the HTML page
-        self.enc = None
-        self.title = None
-        self.displaypath = None
 
     @staticmethod
     def _resolve_path(candidate_path: Union[str, Path]) -> Path:
@@ -101,6 +91,17 @@ class HTMLTemplateBuilder:
     def back_svg_path(self, value: Union[str, Path]):
         if self._is_resolved_to_svg(value):
             self._back_svg_path = self._resolve_path(value)
+
+
+class HTMLTemplateBuilder(_AssetHelper):
+    def __init__(self, html_template_path: Optional[Union[str, Path]] = None, **kwargs):
+        super().__init__(html_template_path, **kwargs)
+        self.back_svg = Path(self.back_svg_path).read_text(encoding='utf-8')
+
+        # enc = encoding for the HTML page
+        self.enc = None
+        self.title = None
+        self.displaypath = None
 
     def _build_directory_rows(self, entries, path):
         table_rows = []
