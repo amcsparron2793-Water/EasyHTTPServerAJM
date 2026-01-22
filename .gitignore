@@ -1,6 +1,8 @@
 __pycache__
 /logs/
 /.idea/
+/.tox/
+/build/
 /venv/
 /dist/
 /old_dist/
