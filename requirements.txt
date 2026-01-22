@@ -1,5 +1,5 @@
 EasyLoggerAJM==1.9.7.1
-pyemailerajm==1.9.3
+pyemailerajm==1.9.3.2
 setuptools==78.1.1
 build==1.3.0
 colorama==0.4.6
