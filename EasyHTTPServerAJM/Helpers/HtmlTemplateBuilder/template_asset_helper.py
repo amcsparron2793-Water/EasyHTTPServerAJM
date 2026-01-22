@@ -10,6 +10,7 @@ class AssetHelper:
     DEFAULT_TEMPLATES_PATH = Path('../Misc_Project_Files/templates').resolve()
     DEFAULT_HTML_TEMPLATE_PATH = Path(DEFAULT_TEMPLATES_PATH, 'directory_page_template.html').resolve()
     DEFAULT_BACK_SVG_PATH = Path(DEFAULT_ASSETS_PATH, 'BackBoxWithText.svg').resolve()
+    DEFAULT_DIRECTORY_PAGE_CSS_PATH = Path(DEFAULT_ASSETS_PATH, 'directory_page.css').resolve()
 
     def __init__(self, html_template_path: Optional[Union[str, Path]] = None, **kwargs):
         self.logger = kwargs.pop('logger', getLogger(__name__))
@@ -17,6 +18,8 @@ class AssetHelper:
         self._html_template_path = None
         self._assets_path = None
         self._back_svg_path = None
+        self._directory_page_css = None
+
         self.path_validator = kwargs.pop('path_validator_class', PathValidator)(**kwargs, logger=self.logger)
         self._set_paths(html_template_path, **kwargs)
 
@@ -27,6 +30,8 @@ class AssetHelper:
                                     else self.__class__.DEFAULT_HTML_TEMPLATE_PATH), PathValidationType.HTML)
         self.assets_path = (kwargs.get('assets_path', self.__class__.DEFAULT_ASSETS_PATH), PathValidationType.DIR)
         self.back_svg_path = (kwargs.get('back_svg_path', self.__class__.DEFAULT_BACK_SVG_PATH), PathValidationType.SVG)
+        self.directory_page_css = (kwargs.get('directory_page_css', self.__class__.DEFAULT_DIRECTORY_PAGE_CSS_PATH),
+                                   PathValidationType.CSS)
         self.logger.debug("Paths set")
 
     def set_validator_paths(self, **kwargs):
@@ -75,3 +80,11 @@ class AssetHelper:
     @back_svg_path.setter
     def back_svg_path(self, value: Tuple[Union[str, Path], PathValidationType]):
         self._set_property(value, '_back_svg_path')
+
+    @property
+    def directory_page_css(self):
+        return self._directory_page_css
+
+    @directory_page_css.setter
+    def directory_page_css(self, value: Tuple[Union[str, Path], PathValidationType]):
+        self._set_property(value, '_directory_page_css')

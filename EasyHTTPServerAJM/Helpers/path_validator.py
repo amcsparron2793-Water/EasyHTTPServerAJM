@@ -65,21 +65,29 @@ class PathValidator:
         else:
             raise ValueError(f"{self.candidate_path} is not a valid file")
 
+    def _is_resolved_to_specific_file(self, file_suffix: str) -> bool:
+        file_suffix = file_suffix.lstrip('.')
+        c_path_suffix = self.candidate_path.suffix.lstrip('.')
+        self._check_for_path_set()
+        if self.candidate_path.is_file() and c_path_suffix == file_suffix:
+            return True
+        else:
+            raise ValueError(f"{self.candidate_path} is not a valid {file_suffix} file")
+
     @property
     def is_resolved_to_html(self) -> bool:
         self._check_for_path_set()
-        if self.is_resolved_to_file and self.candidate_path.suffix == '.html':
-            return True
-        else:
-            raise ValueError(f"{self.candidate_path} is not a valid html file")
+        return self._is_resolved_to_specific_file('html')
 
     @property
     def is_resolved_to_svg(self) -> bool:
         self._check_for_path_set()
-        if self.is_resolved_to_file and self.candidate_path.suffix == '.svg':
-            return True
-        else:
-            raise ValueError(f"{self.candidate_path} is not a valid svg file")
+        return self._is_resolved_to_specific_file('svg')
+
+    @property
+    def is_resolved_to_css(self) -> bool:
+        self._check_for_path_set()
+        return self._is_resolved_to_specific_file('css')
 
     def _check_for_path_set(self):
         if self.candidate_path is None:
@@ -94,5 +102,7 @@ class PathValidator:
             return self.is_resolved_to_html
         elif self.candidate_path_validation_type == PathValidationType.SVG:
             return self.is_resolved_to_svg
+        elif self.candidate_path_validation_type == PathValidationType.CSS:
+            return self.is_resolved_to_css
         else:
             raise ValueError(f"{self.candidate_path_validation_type} is not a valid validation type")

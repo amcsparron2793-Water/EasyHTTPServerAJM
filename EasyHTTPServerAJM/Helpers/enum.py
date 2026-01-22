@@ -6,3 +6,4 @@ class PathValidationType(Enum):
     FILE = 'file'
     HTML = 'html'
     SVG = 'svg'
+    CSS = 'css'

@@ -11,7 +11,6 @@ from pathlib import Path
 from EasyHTTPServerAJM import EasyHTTPLogger
 
 
-# TODO: needs logging support
 class EasyHTTPServer:
     """
     Basic class-based HTTP server for file sharing.

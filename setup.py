@@ -29,6 +29,7 @@ setup(
     url='https://github.com/amcsparron2793-Water/EasyHTTPServerAJM',
     download_url=f'https://github.com/amcsparron2793-Water/EasyHTTPServerAJM/archive/refs/tags/{get_property("__version__", project_name)}.tar.gz',
     keywords=[],
+    include_dirs=['Misc_Project_Files/assets', 'Misc_Project_Files/templates'],
     install_requires=['EasyLoggerAJM', 'PyEmailerAJM'],
     license='MIT License',
     author='Amcsparron',
