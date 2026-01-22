@@ -17,7 +17,7 @@ class AssetHelper:
         self._html_template_path = None
         self._assets_path = None
         self._back_svg_path = None
-        self.path_validator = PathValidator(**kwargs, logger=self.logger)
+        self.path_validator = kwargs.pop('path_validator_class', PathValidator)(**kwargs, logger=self.logger)
         self._set_paths(html_template_path, **kwargs)
 
     def _set_paths(self, html_template_path: Optional[Union[str, Path]] = None, **kwargs):

@@ -12,7 +12,11 @@ class PrettyDirectoryHandler(SimpleHTTPRequestHandler):
                  server: BaseServer, **kwargs):
         self.logger = kwargs.pop('logger', getLogger(__name__))
         self.html_template_path = kwargs.pop('html_template_path', None)
-        self.template_builder = HTMLTemplateBuilder(self.html_template_path, logger=self.logger)
+        self.template_builder = (
+            kwargs.pop('html_template_builder_class', HTMLTemplateBuilder)(
+                self.html_template_path, logger=self.logger, **kwargs
+            )
+        )
         self.template_builder.enc = "utf-8"
 
         super().__init__(request, client_address, server)
