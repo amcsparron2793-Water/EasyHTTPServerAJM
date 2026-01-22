@@ -37,7 +37,6 @@ class PathValidator:
             elif p.is_file():
                 # basic file; further refine by extension
                 ext = p.suffix.lower()
-                print(ext)
                 if ext == ".html":
                     self.is_resolved_to_html = True
                 elif ext == ".svg":
@@ -93,7 +92,6 @@ class PathValidator:
         return None
 
     def __getattr__(self, name: str):
-        print(name)
         vt = self._name_to_validation_type(name)
         if vt is not None:
             # expose a boolean attribute like .is_resolved_to_file
