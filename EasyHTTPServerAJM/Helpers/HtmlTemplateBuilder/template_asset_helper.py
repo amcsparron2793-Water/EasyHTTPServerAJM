@@ -10,7 +10,7 @@ class AssetHelper:
     DEFAULT_TEMPLATES_PATH = Path('../Misc_Project_Files/templates').resolve()
     DEFAULT_HTML_TEMPLATE_PATH = Path(DEFAULT_TEMPLATES_PATH, 'directory_page_template.html').resolve()
     DEFAULT_BACK_SVG_PATH = Path(DEFAULT_ASSETS_PATH, 'BackBoxWithText.svg').resolve()
-    DEFAULT_DIRECTORY_PAGE_CSS_PATH = Path(DEFAULT_ASSETS_PATH, 'directory_page.css').resolve()
+    DEFAULT_DIRECTORY_PAGE_CSS_PATH = Path(DEFAULT_TEMPLATES_PATH, 'directory_page.css').resolve()
 
     def __init__(self, html_template_path: Optional[Union[str, Path]] = None, **kwargs):
         self.logger = kwargs.pop('logger', getLogger(__name__))
@@ -18,21 +18,65 @@ class AssetHelper:
         self._html_template_path = None
         self._assets_path = None
         self._back_svg_path = None
-        self._directory_page_css = None
+        self._directory_page_css_path = None
 
         self.path_validator = kwargs.pop('path_validator_class', PathValidator)(**kwargs, logger=self.logger)
         self._set_paths(html_template_path, **kwargs)
 
     def _set_paths(self, html_template_path: Optional[Union[str, Path]] = None, **kwargs):
-        self.templates_path = (kwargs.get('templates_path', self.__class__.DEFAULT_TEMPLATES_PATH),
-                               PathValidationType.DIR)
-        self.html_template_path = ((html_template_path if html_template_path is not None
-                                    else self.__class__.DEFAULT_HTML_TEMPLATE_PATH), PathValidationType.HTML)
-        self.assets_path = (kwargs.get('assets_path', self.__class__.DEFAULT_ASSETS_PATH), PathValidationType.DIR)
-        self.back_svg_path = (kwargs.get('back_svg_path', self.__class__.DEFAULT_BACK_SVG_PATH), PathValidationType.SVG)
-        self.directory_page_css = (kwargs.get('directory_page_css', self.__class__.DEFAULT_DIRECTORY_PAGE_CSS_PATH),
-                                   PathValidationType.CSS)
+        # Each call passes (path, PathValidationType) plus the private attr name
+        self._set_property(
+            (kwargs.get('templates_path', self.__class__.DEFAULT_TEMPLATES_PATH), PathValidationType.DIR),
+            "_templates_path",
+        )
+        self._set_property(
+            (
+                html_template_path
+                if html_template_path is not None
+                else self.__class__.DEFAULT_HTML_TEMPLATE_PATH,
+                PathValidationType.HTML,
+            ),
+            "_html_template_path",
+        )
+        self._set_property(
+            (kwargs.get('assets_path', self.__class__.DEFAULT_ASSETS_PATH), PathValidationType.DIR),
+            "_assets_path",
+        )
+        self._set_property(
+            (kwargs.get('back_svg_path', self.__class__.DEFAULT_BACK_SVG_PATH), PathValidationType.SVG),
+            "_back_svg_path",
+        )
+        self._set_property(
+            (
+                kwargs.get(
+                    'directory_page_css_path',
+                    self.__class__.DEFAULT_DIRECTORY_PAGE_CSS_PATH,
+                ),
+                PathValidationType.CSS,
+            ),
+            "_directory_page_css_path",
+        )
         self.logger.debug("Paths set")
+
+    @property
+    def templates_path(self) -> Optional[Path]:
+        return self._templates_path
+
+    @property
+    def html_template_path(self) -> Optional[Path]:
+        return self._html_template_path
+
+    @property
+    def assets_path(self) -> Optional[Path]:
+        return self._assets_path
+
+    @property
+    def back_svg_path(self) -> Optional[Path]:
+        return self._back_svg_path
+
+    @property
+    def directory_page_css_path(self) -> Optional[Path]:
+        return self._directory_page_css_path
 
     def set_validator_paths(self, **kwargs):
         self.path_validator.candidate_path = kwargs.get('candidate_path', None)
@@ -45,46 +89,9 @@ class AssetHelper:
                       private_property_name: str):
         self.set_validator_paths(candidate_path=value[0],
                                  candidate_path_validation_type=value[1])
+        self.path_validator.resolve()
         if self.path_validator.validate():
             self.__setattr__(private_property_name, value[0])
             self.logger.debug(f"{private_property_name} set to {value[0]}")
-
-    @property
-    def templates_path(self):
-        return self._templates_path
-
-    @templates_path.setter
-    def templates_path(self, value: Tuple[Union[str, Path], PathValidationType]):
-        self._set_property(value, '_templates_path')
-
-    @property
-    def html_template_path(self):
-        return self._html_template_path
-
-    @html_template_path.setter
-    def html_template_path(self, value: Tuple[Union[str, Path], PathValidationType]):
-        self._set_property(value, '_html_template_path')
-
-    @property
-    def assets_path(self):
-        return self._assets_path
-
-    @assets_path.setter
-    def assets_path(self, value: Tuple[Union[str, Path], PathValidationType]):
-        self._set_property(value, '_assets_path')
-
-    @property
-    def back_svg_path(self):
-        return self._back_svg_path
-
-    @back_svg_path.setter
-    def back_svg_path(self, value: Tuple[Union[str, Path], PathValidationType]):
-        self._set_property(value, '_back_svg_path')
-
-    @property
-    def directory_page_css(self):
-        return self._directory_page_css
-
-    @directory_page_css.setter
-    def directory_page_css(self, value: Tuple[Union[str, Path], PathValidationType]):
-        self._set_property(value, '_directory_page_css')
+        else:
+            self.logger.warning(f"Failed to set {private_property_name} to {value[0]}")

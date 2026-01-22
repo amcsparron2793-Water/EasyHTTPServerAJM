@@ -13,6 +13,7 @@ class HTMLTemplateBuilder(AssetHelper):
         self.logger = kwargs.pop('logger', getLogger(__name__))
         super().__init__(html_template_path, logger=self.logger, **kwargs)
         self.back_svg = Path(self.back_svg_path).read_text(encoding='utf-8')
+        self.dir_page_css = Path(self.directory_page_css_path).read_text(encoding='utf-8')
 
         # enc = encoding for the HTML page
         self.enc = None
@@ -34,7 +35,8 @@ class HTMLTemplateBuilder(AssetHelper):
                         'enc': self.enc,
                         'parent_dir_link': parent_dir_link,
                         'rows': rows,
-                        'back_svg': self.back_svg}
+                        'back_svg': self.back_svg,
+                        'css_contents': self.dir_page_css}
 
         return {**full_context, **(add_to_context or {})}
 
