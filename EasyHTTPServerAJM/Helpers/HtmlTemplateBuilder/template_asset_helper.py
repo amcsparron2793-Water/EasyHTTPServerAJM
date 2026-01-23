@@ -89,9 +89,9 @@ class AssetHelper:
                       private_property_name: str):
         self.set_validator_paths(candidate_path=value[0],
                                  candidate_path_validation_type=value[1])
-        self.path_validator.resolve()
+        self.path_validator.resolve_flags()
         if self.path_validator.validate():
             self.__setattr__(private_property_name, value[0])
             self.logger.debug(f"{private_property_name} set to {value[0]}")
         else:
-            self.logger.warning(f"Failed to set {private_property_name} to {value[0]}")
+            self.logger.error(f"Failed to set {private_property_name} to {value[0]} - did not validate")

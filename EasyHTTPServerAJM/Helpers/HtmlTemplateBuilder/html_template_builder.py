@@ -12,14 +12,32 @@ class HTMLTemplateBuilder(AssetHelper):
     def __init__(self, html_template_path: Optional[Union[str, Path]] = None, **kwargs):
         self.logger = kwargs.pop('logger', getLogger(__name__))
         super().__init__(html_template_path, logger=self.logger, **kwargs)
-        self.back_svg = Path(self.back_svg_path).read_text(encoding='utf-8')
-        self.dir_page_css = Path(self.directory_page_css_path).read_text(encoding='utf-8')
+        self.back_svg = None
+        self.dir_page_css = None
+
+        self._load_injected_html()
 
         # enc = encoding for the HTML page
         self.enc = None
         self.title = None
         self.displaypath = None
         self.path = None
+
+    def _load_injected_html(self):
+        if self.back_svg_path:
+            self.back_svg = self._read_text_file(self.back_svg_path)
+        else:
+            self.logger.error("back_svg could not be loaded.")
+
+        if self.directory_page_css_path:
+            self.dir_page_css = self._read_text_file(self.directory_page_css_path)
+        else:
+            self.dir_page_css = None
+            self.logger.error("directory_page_css could not be loaded.")
+
+    @staticmethod
+    def _read_text_file(path: Union[str, Path]):
+        return Path(path).read_text(encoding='utf-8')
 
     def _build_directory_rows(self, entries, path):
         table_rows = []
