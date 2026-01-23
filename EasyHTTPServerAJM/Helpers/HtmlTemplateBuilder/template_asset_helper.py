@@ -24,8 +24,8 @@ class AssetHelper:
     :ivar DEFAULT_DIRECTORY_PAGE_CSS_PATH: Default path to the CSS file for directory pages.
     :type DEFAULT_DIRECTORY_PAGE_CSS_PATH: Path
     """
-    DEFAULT_ASSETS_PATH = Path('../Misc_Project_Files/assets').resolve()
-    DEFAULT_TEMPLATES_PATH = Path('../Misc_Project_Files/templates').resolve()
+    DEFAULT_ASSETS_PATH = Path('./Helpers/HtmlTemplateBuilder/assets').resolve()
+    DEFAULT_TEMPLATES_PATH = Path('./Helpers/HtmlTemplateBuilder/templates').resolve()
     DEFAULT_HTML_TEMPLATE_PATH = Path(DEFAULT_TEMPLATES_PATH, 'directory_page_template.html').resolve()
     DEFAULT_BACK_SVG_PATH = Path(DEFAULT_ASSETS_PATH, 'BackBoxWithText.svg').resolve()
     DEFAULT_DIRECTORY_PAGE_CSS_PATH = Path(DEFAULT_TEMPLATES_PATH, 'directory_page.css').resolve()
