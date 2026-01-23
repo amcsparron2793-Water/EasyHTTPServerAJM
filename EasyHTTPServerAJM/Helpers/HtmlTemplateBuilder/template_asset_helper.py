@@ -6,6 +6,24 @@ from EasyHTTPServerAJM.Helpers import PathValidator, PathValidationType
 
 
 class AssetHelper:
+    """
+    Provides functionality to manage and validate paths for assets, templates, and related resources.
+
+    This class serves as a utility to handle file paths associated with various elements like templates,
+    assets, and stylesheets. It validates paths using an injected path validation class and provides
+    structured access to these paths through class properties.
+
+    :ivar DEFAULT_ASSETS_PATH: Default path to the assets directory.
+    :type DEFAULT_ASSETS_PATH: Path
+    :ivar DEFAULT_TEMPLATES_PATH: Default path to the templates directory.
+    :type DEFAULT_TEMPLATES_PATH: Path
+    :ivar DEFAULT_HTML_TEMPLATE_PATH: Default path to the HTML template file.
+    :type DEFAULT_HTML_TEMPLATE_PATH: Path
+    :ivar DEFAULT_BACK_SVG_PATH: Default path to the back SVG file.
+    :type DEFAULT_BACK_SVG_PATH: Path
+    :ivar DEFAULT_DIRECTORY_PAGE_CSS_PATH: Default path to the CSS file for directory pages.
+    :type DEFAULT_DIRECTORY_PAGE_CSS_PATH: Path
+    """
     DEFAULT_ASSETS_PATH = Path('../Misc_Project_Files/assets').resolve()
     DEFAULT_TEMPLATES_PATH = Path('../Misc_Project_Files/templates').resolve()
     DEFAULT_HTML_TEMPLATE_PATH = Path(DEFAULT_TEMPLATES_PATH, 'directory_page_template.html').resolve()

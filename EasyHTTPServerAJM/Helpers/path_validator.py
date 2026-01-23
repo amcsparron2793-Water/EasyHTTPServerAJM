@@ -11,6 +11,19 @@ class CandidatePathNotSetError(Exception):
 
 
 class PathFlagResolver(ABC):
+    """
+    Resolves flags based on the attributes of a given file system path.
+
+    This abstract base class provides functionality to evaluate a candidate file
+    system path and determine its characteristics by setting specific flags. It
+    is designed to be subclassed to implement application-specific logic for
+    path-related validation and resolution. The flags indicate properties
+    such as whether the path is a directory, a file, or specific file types
+    (e.g., HTML, SVG, CSS).
+
+    :ivar logger: Logger instance used for logging information, debug messages, and errors.
+    :type logger: logging.Logger
+    """
     def __init__(self, **kwargs):
         self.logger = kwargs.get('logger', getLogger(__name__))
         # internal storage for all “resolved” flags
@@ -83,6 +96,19 @@ class PathFlagResolver(ABC):
 
 
 class PathValidator(PathFlagResolver):
+    """
+    Responsible for validating paths and dynamically resolving associated validation attributes.
+
+    This class extends `PathFlagResolver` to handle validation and dynamic resolution of paths
+    and their corresponding validation types. It utilizes a logger for debugging and tracking
+    internal processes. The primary use of this class is to set, validate, and resolve paths
+    and their attributes dynamically, based on predefined validation types.
+
+    :ivar candidate_path: Candidate path that should be resolved and validated.
+    :type candidate_path: Optional[Union[str, Path]]
+    :ivar candidate_path_validation_type: Validation type for the candidate path.
+    :type candidate_path_validation_type: Union[str, PathValidationType]
+    """
     def __init__(self, **kwargs):
         self.logger = kwargs.pop('logger', getLogger(__name__))
         super().__init__(logger=self.logger, **kwargs)
@@ -91,6 +117,7 @@ class PathValidator(PathFlagResolver):
         self._candidate_path_validation_type = None
 
         self.candidate_path: Optional[Union[str, Path]] = kwargs.get('candidate_path', None)
+        # noinspection PyTypeChecker
         self.candidate_path_validation_type = kwargs.get('candidate_path_validation_type',
                                                          PathValidationType.FILE)
 

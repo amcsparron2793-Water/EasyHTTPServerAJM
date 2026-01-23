@@ -8,6 +8,21 @@ from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder import HTMLTemplateBuilder
 
 
 class PrettyDirectoryHandler(SimpleHTTPRequestHandler):
+    """
+    Handles HTTP requests to provide custom directory listings in a user-friendly HTML format.
+
+    This handler overrides the default `SimpleHTTPRequestHandler` to generate a dynamic,
+    template-based directory listing with enhanced customization. It enables integration
+    of custom HTML templates and logging functionalities.
+
+    :ivar logger: Logger instance for logging debug and informational messages.
+    :type logger: logging.Logger
+    :ivar html_template_path: Path to the HTML template used for rendering the directory.
+    :type html_template_path: str or None
+    :ivar template_builder: Instance of the HTML template builder responsible for creating
+        directory page content.
+    :type template_builder: HTMLTemplateBuilder
+    """
     def __init__(self, request: socket.SocketType, client_address,
                  server: BaseServer, **kwargs):
         self.logger = kwargs.pop('logger', getLogger(__name__))

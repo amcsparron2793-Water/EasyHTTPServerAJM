@@ -9,6 +9,25 @@ from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder import AssetHelper
 
 
 class HTMLTemplateBuilder(AssetHelper):
+    """
+    HTMLTemplateBuilder is a utility class for managing and building HTML templates.
+
+    This class is designed to handle the generation and customization of HTML
+    templates with additional features such as incorporating CSS contents, SVG
+    backdrops, and dynamic table rows based on directory entries. It is intended
+    to simplify the creation of HTML pages for directory listings or related use
+    cases by managing templates, context, and injected elements internally.
+
+    Inheritance:
+        AssetHelper: Inherits functionality from the AssetHelper base class.
+
+    :ivar back_svg: Stores the SVG contents for the background, if available.
+    :ivar dir_page_css: Contains the CSS contents for directory pages, if available.
+    :ivar enc: Specifies the character encoding for the HTML page.
+    :ivar title: Title of the HTML page.
+    :ivar displaypath: Path for display purposes in the HTML page.
+    :ivar path: Path to be used for naming and reference within the HTML template.
+    """
     def __init__(self, html_template_path: Optional[Union[str, Path]] = None, **kwargs):
         self.logger = kwargs.pop('logger', getLogger(__name__))
         super().__init__(html_template_path, logger=self.logger, **kwargs)
