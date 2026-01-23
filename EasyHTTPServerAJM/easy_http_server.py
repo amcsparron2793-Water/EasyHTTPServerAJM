@@ -145,12 +145,16 @@ class EasyHTTPServer:
         :return: An instance of the handler class initialized with the given parameters.
         :rtype: handler_class
         """
-        return self.handler_class(request,
-                                  client_address,
-                                  server,
-                                  directory=self.directory,
-                                  logger=self.logger,
-                                  html_template_path=self.html_template_path)
+        try:
+            return self.handler_class(request,
+                                      client_address,
+                                      server,
+                                      directory=self.directory,
+                                      logger=self.logger,
+                                      html_template_path=self.html_template_path)
+        except Exception as e:
+            self.logger.critical(f"Failed to create handler: {e}")
+            self.err_stop()
 
     def start(self, **kwargs) -> None:
         """Start the HTTP server and block until interrupted (Ctrl+C)."""
@@ -180,6 +184,15 @@ class EasyHTTPServer:
             self._httpd.shutdown()
             self._httpd.server_close()
             self._httpd = None
+
+    def err_stop(self) -> None:
+        """
+        Stop the server if it's running.
+        (Only useful if you manage the server in a separate thread/process.)
+        """
+        self.stop()
+        # FIXME: this error exit seems to be ignored - create my own ThreadingHTTPServer class and override shutdown?
+        exit(1)
 
 
 if __name__ == "__main__":

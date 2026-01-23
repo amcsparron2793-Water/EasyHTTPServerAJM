@@ -54,9 +54,12 @@ class HTMLTemplateBuilder(AssetHelper):
             self.dir_page_css = None
             self.logger.error("directory_page_css could not be loaded.")
 
-    @staticmethod
-    def _read_text_file(path: Union[str, Path]):
-        return Path(path).read_text(encoding='utf-8')
+    def _read_text_file(self, path: Union[str, Path]):
+        try:
+            return Path(path).read_text(encoding='utf-8')
+        except TypeError as e:
+            self.logger.error(f"Could not read file {path}")
+            raise FileNotFoundError(f"Could not read file {path}") from e
 
     def _build_directory_rows(self, entries, path):
         table_rows = []
@@ -78,8 +81,12 @@ class HTMLTemplateBuilder(AssetHelper):
         return {**full_context, **(add_to_context or {})}
 
     def _build_body_template(self, context: dict):
-        template = Template(Path(self.html_template_path).read_text(encoding='utf-8'))
-        return template.safe_substitute(context)
+        try:
+            template = Template(self._read_text_file(self.html_template_path))
+            return template.safe_substitute(context)
+        except FileNotFoundError as e:
+            self.logger.critical(f"Could not read template file {self.html_template_path}")
+            raise e
 
     @staticmethod
     def _process_directory_entry(path, name):

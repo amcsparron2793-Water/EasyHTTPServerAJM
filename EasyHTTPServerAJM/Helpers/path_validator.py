@@ -87,7 +87,11 @@ class PathFlagResolver(ABC):
             self.logger.debug(f"{p} exists")
             self._resolve_existing_path(p)
         else:
-            self.logger.error(f"{p} does not exist, could not resolve")
+            if p.suffix.lstrip('.') != PathValidationType.HTML.value:
+                self.logger.error(f"{p} does not exist, could not resolve")
+            else:
+                self.logger.critical(f"{p} does not exist, could not resolve")
+                #raise FileNotFoundError(f"{p} does not exist") from None
 
     def set_is_resolved_to_attr(self, vt: PathValidationType, value: bool):
         """Helper for resetting flags by enum."""
