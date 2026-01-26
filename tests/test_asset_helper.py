@@ -1,20 +1,21 @@
 import unittest
 from pathlib import Path
 
-from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder.template_asset_helper import AssetHelper
-from EasyHTTPServerAJM.Helpers.enum import PathValidationType
+from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder import AssetHelper
 
 
 def project_root() -> Path:
     # tests directory is under project root
-    return Path(__file__).resolve().parents[1]
+    real_project_root = Path(__file__).resolve().parent.parent
+    template_root = Path("EasyHTTPServerAJM", 'Helpers', 'HtmlTemplateBuilder')
+    test_project_root = Path(real_project_root, template_root)
+    return test_project_root
 
 
 class TestAssetHelper(unittest.TestCase):
     def setUp(self):
-        self.misc = project_root() / "Misc_Project_Files"
-        self.assets = self.misc / "assets"
-        self.templates = self.misc / "templates"
+        self.assets = project_root() / "assets"
+        self.templates = project_root() / "templates"
         self.svg = self.assets / "BackBoxWithText.svg"
         self.css = self.templates / "directory_page.css"
         self.html = self.templates / "directory_page_template.html"

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Union, Optional
 
 from EasyHTTPServerAJM._version import __version__
@@ -96,10 +96,15 @@ class EasyHTTPServer:
         if print_msg:
             print("Press Ctrl+C to stop.")
 
+    @staticmethod
+    def _round_timedelta(td: timedelta) -> timedelta:
+        return timedelta(seconds=round(td.total_seconds()))
+
     @property
     def runtime(self):
         if self.start_time:
-            self._runtime = (datetime.now() - self.start_time)
+            raw_run_time = (datetime.now() - self.start_time)
+            self._runtime = self._round_timedelta(raw_run_time)
         else:
             self._runtime = 0
         return self._runtime
@@ -156,6 +161,11 @@ class EasyHTTPServer:
             self.logger.critical(f"Failed to create handler: {e}")
             self.err_stop()
 
+    def _set_start_time(self):
+        dt_fmt = "%Y-%m-%d %H:%M:%S"
+        self.start_time = datetime.now().strftime(dt_fmt)
+        self.start_time = datetime.strptime(self.start_time, dt_fmt)
+
     def start(self, **kwargs) -> None:
         """Start the HTTP server and block until interrupted (Ctrl+C)."""
         chdir(self.directory)
@@ -169,7 +179,7 @@ class EasyHTTPServer:
             self._log_all_basic_server_info(**kwargs)
 
             try:
-                self.start_time = datetime.now()
+                self._set_start_time()
                 self.logger.info(f"Server started at {self.start_time}", print_msg=True)
                 httpd.serve_forever()
             except KeyboardInterrupt:
