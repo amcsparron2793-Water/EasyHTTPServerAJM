@@ -45,6 +45,7 @@ class EasyHTTPServer:
     DEFAULT_PORT = 8000
     DEFAULT_DIRECTORY = "."
     DEFAULT_HOST = "0.0.0.0"
+    WIN_ERRS_TO_IGNORE = [10053, 10054]
 
     def __init__(self, directory: Optional[Union[Path, str]] = None,
                  host: Optional[str] = None, port: Optional[int] = None, **kwargs) -> None:
@@ -63,7 +64,7 @@ class EasyHTTPServer:
 
         self._httpd: Optional[TCPServer] = None
         self.start_time: Optional[datetime] = None
-        self.ignore_win_10054_err = kwargs.get('ignore_win_10054_err', True)
+        self.ignore_win_1005x_err = kwargs.get('ignore_win_1005x_err', True)
 
     @classmethod
     def __version__(cls):
@@ -135,6 +136,14 @@ class EasyHTTPServer:
         )
         return parser.parse_args()
 
+    def _handle_win_err(self, err: WindowsError):
+        if err.errno in self.__class__.WIN_ERRS_TO_IGNORE and self.ignore_win_1005x_err:  # existing connection was forcibly closed
+            self.logger.error(err)
+            self.logger.warning("this error was logged and ignored...")
+        else:
+            self.logger.critical(f"Failed to create handler: {err}")
+            self.err_stop()
+
     def _handler_factory(self, request, client_address, server):
         """
         Creates an instance of the specified handler class with the provided parameters.
@@ -159,12 +168,7 @@ class EasyHTTPServer:
                                       logger=self.logger,
                                       html_template_path=self.html_template_path)
         except WindowsError as e:
-            if e.errno == 10054 and self.ignore_win_10054_err:  # existing connection was forcibly closed
-                self.logger.error(e)
-                self.logger.warning("this error was logged and ignored...")
-            else:
-                self.logger.critical(f"Failed to create handler: {e}")
-                self.err_stop()
+            self._handle_win_err(e)
         except Exception as e:
             self.logger.critical(f"Failed to create handler: {e}")
             self.err_stop()
