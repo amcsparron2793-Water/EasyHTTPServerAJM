@@ -63,6 +63,7 @@ class EasyHTTPServer:
 
         self._httpd: Optional[TCPServer] = None
         self.start_time: Optional[datetime] = None
+        self.ignore_win_10054_err = kwargs.get('ignore_win_10054_err', True)
 
     @classmethod
     def __version__(cls):
@@ -157,6 +158,13 @@ class EasyHTTPServer:
                                       directory=self.directory,
                                       logger=self.logger,
                                       html_template_path=self.html_template_path)
+        except WindowsError as e:
+            if e.errno == 10054 and self.ignore_win_10054_err:  # existing connection was forcibly closed
+                self.logger.error(e)
+                self.logger.warning("this error was logged and ignored...")
+            else:
+                self.logger.critical(f"Failed to create handler: {e}")
+                self.err_stop()
         except Exception as e:
             self.logger.critical(f"Failed to create handler: {e}")
             self.err_stop()
