@@ -74,7 +74,12 @@ class PrettyDirectoryHandler(SimpleHTTPRequestHandler):
             return self._render_directory(self.translate_path(self.path),
                                           { 'message': f"<p style='color:red;'>Upload failed: {escape(str(e))}</p>" })
 
-        field = form.getvalue('file', None)
+        try:
+            field = form['file']
+        except KeyError as e:
+            self.logger.error(e, exc_info=True)
+            field = None
+
         if not getattr(field, 'filename', None):
             return self._render_directory(self.translate_path(self.path),
                                           { 'message': "<p style='color:red;'>No file provided.</p>" })
