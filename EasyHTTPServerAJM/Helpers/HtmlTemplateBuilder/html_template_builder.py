@@ -8,7 +8,39 @@ from typing import Optional, Union
 from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder import AssetHelper
 
 
-class HTMLTemplateBuilder(AssetHelper):
+class _TableWrapperHelper:
+    VALID_TABLE_TAGS = ['tr', 'th', 'td']
+
+    @staticmethod
+    def _process_link_entry(link, display_text):
+        return f"<a href='{link}'>{display_text}</a>"
+
+    @staticmethod
+    def get_table_tag(tag_type, is_end=False):
+        if not is_end:
+            return f'<{tag_type}>'
+        return f'</{tag_type}>'
+
+    def wrap_content_in_tag(self, content, tag):
+        if tag in self.__class__.VALID_TABLE_TAGS:
+            return f"{self.get_table_tag(tag)}{content}{self.get_table_tag(tag, True)}"
+        raise AttributeError(f"tag \'{tag}\' not found in VALID_TABLE_TAGS "
+                             f"({self.__class__.VALID_TABLE_TAGS})")
+
+    def wrap_table_row(self, content: str):
+        tag = 'tr'
+        return self.wrap_content_in_tag(content, tag)
+
+    def wrap_table_data(self, content):
+        tag = 'td'
+        return self.wrap_content_in_tag(content, tag)
+
+    def wrap_table_header(self, content):
+        tag = 'th'
+        return self.wrap_content_in_tag(content, tag)
+
+
+class HTMLTemplateBuilder(AssetHelper, _TableWrapperHelper):
     """
     HTMLTemplateBuilder is a utility class for managing and building HTML templates.
 
@@ -28,6 +60,9 @@ class HTMLTemplateBuilder(AssetHelper):
     :ivar displaypath: Path for display purposes in the HTML page.
     :ivar path: Path to be used for naming and reference within the HTML template.
     """
+
+    TABLE_HEADERS = ['Name', 'access_time', 'modified_time', 'created_time']
+
     def __init__(self, html_template_path: Optional[Union[str, Path]] = None, **kwargs):
         self.logger = kwargs.pop('logger', getLogger(__name__))
         super().__init__(html_template_path, logger=self.logger, **kwargs)
@@ -41,6 +76,11 @@ class HTMLTemplateBuilder(AssetHelper):
         self.title = None
         self.displaypath = None
         self.path = None
+
+    @classmethod
+    def table_header_padding(cls):
+        calc_padding = (len(cls.TABLE_HEADERS) - 1)
+        return calc_padding if calc_padding >= 0 else 0
 
     def _load_injected_html(self):
         if self.back_svg_path:
@@ -67,11 +107,32 @@ class HTMLTemplateBuilder(AssetHelper):
             table_rows.append(self._process_directory_entry(path, name))
         return table_rows
 
+    def _build_parent_dir_link(self):
+        # <td><a href='..'>..</a></td>
+        pdl_base = self.wrap_table_data(self._process_link_entry('..','..'))
+        pdl_with_padding = [pdl_base, (self.wrap_table_data(' ') * self.__class__.table_header_padding())]
+
+        parent_dir_link = self.wrap_table_row(f"{' '.join(pdl_with_padding)}")
+        parent_dir_link = parent_dir_link if self.path not in ("/", "") else ""
+
+        return parent_dir_link
+
+    def _build_final_table_headers(self):
+        headers = ''.join([self.wrap_table_header(x) for x in self.__class__.TABLE_HEADERS])
+        return headers
+
+    def _get_std_table_content(self, entries, path):
+        parent_dir_link = self._build_parent_dir_link()
+        rows = '\n'.join(self._build_directory_rows(entries, path))
+        headers = self._build_final_table_headers()
+        return parent_dir_link, headers, rows
+
     def _build_template_safe_context(self, entries, path, add_to_context: dict = None):
         # signature_html = '<br>'.join(self.email_signature.split('\n'))
-        parent_dir_link = "<tr><td><a href='..'>..</a></td></tr>" if self.path not in ("/", "") else ""
-        rows = '\n'.join(self._build_directory_rows(entries, path))
+        parent_dir_link, headers, rows = self._get_std_table_content(entries, path)
+
         full_context = {'title': self.title,
+                        'table_headers': headers,
                         'enc': self.enc,
                         'parent_dir_link': parent_dir_link,
                         'rows': rows,
@@ -89,13 +150,43 @@ class HTMLTemplateBuilder(AssetHelper):
             raise e
 
     @staticmethod
-    def _process_directory_entry(path, name):
+    def _get_file_stats(file_path):
+        stats = os.stat(file_path)
+        from datetime import datetime
+        file_stats = {'access_time': datetime.fromtimestamp(stats.st_atime).ctime(),
+                      'modified_time': datetime.fromtimestamp(stats.st_mtime).ctime(),
+                      'created_time': datetime.fromtimestamp(stats.st_ctime).ctime()}
+        return file_stats
+
+    def _format_file_entry_stats(self, file_path):
+        fstats = [self.wrap_table_data(f"{x[1]}") for x in self._get_file_stats(file_path=file_path).items()]
+        fstats.reverse()
+        entry_stats = (''.join(fstats))
+        return entry_stats
+
+    def _format_table_data_row(self, entry_stats, **kwargs):
+        link, display = kwargs.get('link_tup', (None, None))
+        table_data = None
+
+        if link and display:
+            table_data = self.wrap_table_data(self._process_link_entry(link, display))
+
+        final_row = [entry_stats, table_data]
+        final_row.reverse()
+
+        table_data = (''.join(final_row))
+        return table_data
+
+    def _process_directory_entry(self, path, name):
         fullname = os.path.join(path, name)
-        # TODO: add stats
-        # print(os.stat(fullname))
+
         display = name + ("/" if os.path.isdir(fullname) else "")
         link = escape(display)
-        return f"<tr><td><a href='{link}'>{display}</a></td></tr>"
+
+        entry_stats = self._format_file_entry_stats(fullname)
+        table_data = self._format_table_data_row(entry_stats, link_tup=(link, display))
+
+        return self.wrap_table_row(table_data)
 
     def build_page_body(self, entries, path, add_to_context: dict = None) -> str:
         safe_context = self._build_template_safe_context(entries, path, add_to_context)

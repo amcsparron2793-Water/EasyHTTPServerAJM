@@ -1,5 +1,7 @@
 body { font-family: sans-serif; margin: 2rem; }
 table { border-collapse: collapse; }
-th td { padding: 0.25rem 0.5rem; }
+th { padding: 0.25rem 0.5rem; }
+td {padding: 5px;}
+
 tr:nth-child(even) { background: #f4f4f4; }
 a { text-decoration: none; }
