@@ -4,4 +4,5 @@ th { padding: 0.25rem 0.5rem; }
 td {padding: 5px;}
 
 tr:nth-child(even) { background: #f4f4f4; }
+tr:nth-child(odd) { background: #ffffff; }
 a { text-decoration: none; }
