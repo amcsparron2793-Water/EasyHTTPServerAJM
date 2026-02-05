@@ -174,13 +174,23 @@ class HTMLTemplateBuilder(AssetHelper, FormatDirectoryEntryMixin, TableWrapperHe
         # signature_html = '<br>'.join(self.email_signature.split('\n'))
         parent_dir_link, headers, rows = self._get_std_table_content(entries, path)
 
+        upload_form = (
+            '<form method="POST" enctype="multipart/form-data">'
+            '<input type="file" name="file" />'
+            '<button type="submit">Upload</button>'
+            '</form>'
+        )
+        message = ''
+
         full_context = {'title': self.title,
                         'table_headers': headers,
                         'enc': self.enc,
                         'parent_dir_link': parent_dir_link,
                         'rows': rows,
                         'back_svg': self.back_svg,
-                        'css_contents': self.dir_page_css}
+                        'css_contents': self.dir_page_css,
+                        'upload_form': upload_form,
+                        'message': message}
 
         return {**full_context, **(add_to_context or {})}
 
