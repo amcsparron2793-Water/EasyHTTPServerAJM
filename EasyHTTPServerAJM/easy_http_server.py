@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Union, Optional
 
 from EasyHTTPServerAJM._version import __version__
-from EasyHTTPServerAJM.CustomHandlers import PrettyDirectoryHandler
+from EasyHTTPServerAJM.CustomHandlers import PrettyDirectoryHandler, UploadPrettyDirectoryHandler
 import argparse
 from http.server import ThreadingHTTPServer
 from socketserver import TCPServer
@@ -41,7 +41,7 @@ class EasyHTTPServer:
     :type start_time: datetime, optional
     """
 
-    DEFAULT_HANDLER_CLASS = PrettyDirectoryHandler#SimpleHTTPRequestHandler
+    DEFAULT_HANDLER_CLASS = PrettyDirectoryHandler#PrettyDirectoryHandler#SimpleHTTPRequestHandler
     DEFAULT_PORT = 8000
     DEFAULT_DIRECTORY = "."
     DEFAULT_HOST = "0.0.0.0"
@@ -50,7 +50,7 @@ class EasyHTTPServer:
     def __init__(self, directory: Optional[Union[Path, str]] = None,
                  host: Optional[str] = None, port: Optional[int] = None, **kwargs) -> None:
         self._runtime = None
-        self.logger = kwargs.get("logger", EasyHTTPLogger(**kwargs)())
+        self.logger = kwargs.pop("logger", EasyHTTPLogger(**kwargs)())
         self.html_template_path = kwargs.get("html_template_path", None)
 
         self.directory = Path(directory) if directory is not None else Path(self.__class__.DEFAULT_DIRECTORY)

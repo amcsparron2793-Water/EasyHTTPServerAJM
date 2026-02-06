@@ -1,1 +1,2 @@
-from EasyHTTPServerAJM.CustomHandlers.pretty_dir_handler import PrettyDirectoryHandler
+from EasyHTTPServerAJM.CustomHandlers.mixins import UploadHandlerMixin
+from EasyHTTPServerAJM.CustomHandlers.pretty_dir_handler import PrettyDirectoryHandler, UploadPrettyDirectoryHandler
