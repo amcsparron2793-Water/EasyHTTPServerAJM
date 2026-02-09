@@ -114,3 +114,31 @@ class AssetHelper:
             self.logger.debug(f"{private_property_name} set to {value[0]}")
         else:
             self.logger.error(f"Failed to set {private_property_name} to {value[0]} - did not validate")
+
+
+class UploadAssetHelper(AssetHelper):
+    DEFAULT_UPLOAD_FORM_TEMPLATE_PATH = Path(AssetHelper.DEFAULT_TEMPLATES_PATH, '_upload_form.html').resolve()
+
+    def __init__(self, html_template_path: Optional[Union[str, Path]] = None,
+                 upload_form_path: Optional[Union[str, Path]] = None, **kwargs):
+        self._upload_form_path = None
+        super().__init__(html_template_path, **kwargs)
+        self._set_paths(html_template_path, upload_form_path, **kwargs)
+
+    def _set_paths(self, html_template_path: Optional[Union[str, Path]] = None,
+                   upload_form_path: Optional[Union[str, Path]] = None,
+                   **kwargs):
+        super()._set_paths(html_template_path, **kwargs)
+        self._set_property(
+            (
+                upload_form_path
+                if upload_form_path is not None
+                else self.__class__.DEFAULT_UPLOAD_FORM_TEMPLATE_PATH,
+                PathValidationType.HTML,
+            ),
+            "_upload_form_path",
+        )
+
+    @property
+    def upload_form_path(self) -> Optional[Path]:
+        return self._upload_form_path

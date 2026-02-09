@@ -5,7 +5,8 @@ from string import Template
 from typing import Optional, Union
 
 from EasyHTTPServerAJM.Helpers import GetUploadSize
-from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder import (AssetHelper, TableWrapperHelper, HTMLWrapperHelper,
+from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder import (AssetHelper, UploadAssetHelper,
+                                                           TableWrapperHelper, HTMLWrapperHelper,
                                                            FormatDirectoryEntryMixin)
 
 
@@ -94,13 +95,6 @@ class HTMLTemplateBuilder(AssetHelper, FormatDirectoryEntryMixin, TableWrapperHe
     def _build_template_safe_context(self, entries, path, add_to_context: dict = None):
         # signature_html = '<br>'.join(self.email_signature.split('\n'))
         parent_dir_link, headers, rows = self._get_std_table_content(entries, path)
-        # TODO: copy from CIPPServer
-        upload_form = (
-            '<form method="POST" enctype="multipart/form-data">'
-            '<input type="file" name="file" />'
-            '<button type="submit">Upload</button>'
-            '</form>'
-        )
         message = ''
 
         full_context = {'title': self.title,
@@ -110,25 +104,30 @@ class HTMLTemplateBuilder(AssetHelper, FormatDirectoryEntryMixin, TableWrapperHe
                         'rows': rows,
                         'back_svg': self.back_svg,
                         'css_contents': self.dir_page_css,
-                        'upload_form': upload_form,
+                        'upload_form': '',
                         'message': message}
 
         return {**full_context, **(add_to_context or {})}
 
-    def _build_body_template(self, context: dict):
+    def _build_template(self, template_path:Path, context: dict):
         try:
-            template = Template(self._read_text_file(self.html_template_path))
+            template = Template(self._read_text_file(template_path))
             return template.safe_substitute(context)
         except FileNotFoundError as e:
-            self.logger.critical(f"Could not read template file {self.html_template_path}")
+            self.logger.critical(f"Could not read template file {template_path}")
             raise e
+
+    def _build_body_template(self, context: dict):
+        return self._build_template(self.html_template_path, context)
 
     def build_page_body(self, entries, path, add_to_context: dict = None) -> str:
         safe_context = self._build_template_safe_context(entries, path, add_to_context)
         return self._build_body_template(safe_context)
 
 
-class HTMLTemplateBuilderUpload(HTMLTemplateBuilder, HTMLWrapperHelper):
+class HTMLTemplateBuilderUpload(HTMLTemplateBuilder, UploadAssetHelper, HTMLWrapperHelper):
+    DEFAULT_UPLOAD_FORM_PATH = Path(HTMLTemplateBuilder.DEFAULT_TEMPLATES_PATH, '_upload_form.html')
+
     def _get_upload_success_msg(self, filename, data_len: int):
         data_len_str = GetUploadSize.conversion_to_str('auto_convert', data_len)
         return self.wrap_success_paragraph(f'Uploaded {escape(filename)} ({data_len_str})')
@@ -136,3 +135,15 @@ class HTMLTemplateBuilderUpload(HTMLTemplateBuilder, HTMLWrapperHelper):
     def _get_upload_fail_msg(self, exception):
         msg = self.wrap_error_paragraph(f"Upload failed: {escape(str(exception))}")
         return msg
+
+    # noinspection PyMethodMayBeStatic
+    def _build_upload_form(self, context: dict = None):
+        if context is None:
+            context = {}
+        upload_form = self._build_template(self.upload_form_path, context)
+        return upload_form
+
+    def _build_template_safe_context(self, entries, path, add_to_context: dict = None):
+        context = super()._build_template_safe_context(entries, path, add_to_context)
+        context['upload_form'] = self._build_upload_form()
+        return context

@@ -1,3 +1,3 @@
 from EasyHTTPServerAJM.logger import EasyHTTPLogger
 from EasyHTTPServerAJM import CustomHandlers, Helpers
-from EasyHTTPServerAJM.easy_http_server import EasyHTTPServer
+from EasyHTTPServerAJM.easy_http_server import EasyHTTPServer, EasyHTTPServerUpload

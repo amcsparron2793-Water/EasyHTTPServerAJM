@@ -11,7 +11,6 @@ class TableWrapperHelper:
     def _process_link_entry(link, display_text):
         return f"<a href='{link}'>{display_text}</a>"
 
-    # TODO: add to TableWrapperHelper
     @staticmethod
     def get_table_tag(tag_type, is_end=False, **kwargs):
         style = kwargs.get('style', None)
