@@ -6,11 +6,10 @@ from typing import Optional, Union
 
 from EasyHTTPServerAJM.Helpers import GetUploadSize
 from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder import (AssetHelper, UploadAssetHelper,
-                                                           TableWrapperHelper, HTMLWrapperHelper,
-                                                           FormatDirectoryEntryMixin)
+                                                           TableWrapperHelper, HTMLWrapperHelper, FileServerMixin)
 
 
-class HTMLTemplateBuilder(AssetHelper, FormatDirectoryEntryMixin, TableWrapperHelper):
+class HTMLTemplateBuilder(AssetHelper, TableWrapperHelper):
     """
     HTMLTemplateBuilder is a utility class for managing and building HTML templates.
 
@@ -66,46 +65,11 @@ class HTMLTemplateBuilder(AssetHelper, FormatDirectoryEntryMixin, TableWrapperHe
             self.logger.error(f"Could not read file {path}")
             raise FileNotFoundError(f"Could not read file {path}") from e
 
-    def _build_directory_rows(self, entries, path):
-        table_rows = []
-        for name in entries:
-            table_rows.append(self._process_directory_entry(path, name))
-        return table_rows
-
-    def _build_parent_dir_link(self):
-        # <td><a href='..'>..</a></td>
-        pdl_base = self.wrap_table_data(self._process_link_entry('..','..'))
-        pdl_with_padding = [pdl_base, (self.wrap_table_data(' ') * self.__class__.table_header_padding())]
-
-        parent_dir_link = self.wrap_table_row(f"{' '.join(pdl_with_padding)}")
-        parent_dir_link = parent_dir_link if self.path not in ("/", "") else ""
-
-        return parent_dir_link
-
-    def _build_final_table_headers(self):
-        headers = ''.join([self.wrap_table_header(x) for x in self.__class__.TABLE_HEADERS])
-        return headers
-
-    def _get_std_table_content(self, entries, path):
-        parent_dir_link = self._build_parent_dir_link()
-        rows = '\n'.join(self._build_directory_rows(entries, path))
-        headers = self._build_final_table_headers()
-        return parent_dir_link, headers, rows
-
     def _build_template_safe_context(self, entries, path, add_to_context: dict = None):
-        # signature_html = '<br>'.join(self.email_signature.split('\n'))
-        parent_dir_link, headers, rows = self._get_std_table_content(entries, path)
-        message = ''
-
         full_context = {'title': self.title,
-                        'table_headers': headers,
                         'enc': self.enc,
-                        'parent_dir_link': parent_dir_link,
-                        'rows': rows,
                         'back_svg': self.back_svg,
-                        'css_contents': self.dir_page_css,
-                        'upload_form': '',
-                        'message': message}
+                        'css_contents': self.dir_page_css}
 
         return {**full_context, **(add_to_context or {})}
 
@@ -125,7 +89,11 @@ class HTMLTemplateBuilder(AssetHelper, FormatDirectoryEntryMixin, TableWrapperHe
         return self._build_body_template(safe_context)
 
 
-class HTMLTemplateBuilderUpload(HTMLTemplateBuilder, UploadAssetHelper, HTMLWrapperHelper):
+class FileServerHTMLTemplateBuilder(FileServerMixin, HTMLTemplateBuilder, AssetHelper):
+    ...
+
+
+class FileServerTemplateUpload(FileServerHTMLTemplateBuilder, UploadAssetHelper, HTMLWrapperHelper):
     DEFAULT_UPLOAD_FORM_PATH = Path(HTMLTemplateBuilder.DEFAULT_TEMPLATES_PATH, '_upload_form.html')
 
     def _get_upload_success_msg(self, filename, data_len: int):

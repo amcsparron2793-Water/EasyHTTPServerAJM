@@ -222,6 +222,6 @@ class EasyHTTPServerUpload(EasyHTTPServer):
 
 
 if __name__ == "__main__":
-    #srv = EasyHTTPServer()
-    srv = EasyHTTPServerUpload()
+    srv = EasyHTTPServer()
+    #srv = EasyHTTPServerUpload()
     srv.start()

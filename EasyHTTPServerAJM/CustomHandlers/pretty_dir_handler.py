@@ -4,7 +4,9 @@ from logging import getLogger
 import os
 from socketserver import BaseServer
 import socket
-from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder import HTMLTemplateBuilder, HTMLTemplateBuilderUpload
+from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder import (HTMLTemplateBuilder,
+                                                           FileServerHTMLTemplateBuilder,
+                                                           FileServerTemplateUpload)
 from EasyHTTPServerAJM.CustomHandlers.mixins import UploadHandlerMixin
 
 
@@ -29,7 +31,7 @@ class PrettyDirectoryHandler(SimpleHTTPRequestHandler):
         self.logger = kwargs.pop('logger', getLogger(__name__))
         self.html_template_path = kwargs.pop('html_template_path', None)
         self.template_builder = (
-            kwargs.pop('html_template_builder_class', HTMLTemplateBuilder)(
+            kwargs.pop('html_template_builder_class', FileServerHTMLTemplateBuilder)(
                 self.html_template_path, logger=self.logger, **kwargs
             )
         )
@@ -84,7 +86,7 @@ class PrettyDirectoryHandler(SimpleHTTPRequestHandler):
 
 class UploadPrettyDirectoryHandler(PrettyDirectoryHandler, UploadHandlerMixin):
     def __init__(self, request: socket.SocketType, client_address, server: BaseServer, **kwargs):
-        kwargs['html_template_builder_class'] = HTMLTemplateBuilderUpload
+        kwargs['html_template_builder_class'] = FileServerTemplateUpload
         super().__init__(request, client_address, server, **kwargs)
 
     # noinspection PyProtectedMember,PyUnresolvedReferences
