@@ -41,7 +41,7 @@ class EasyHTTPServer:
     :type start_time: datetime, optional
     """
 
-    DEFAULT_HANDLER_CLASS = PrettyDirectoryHandler#PrettyDirectoryHandler#SimpleHTTPRequestHandler
+    DEFAULT_HANDLER_CLASS = PrettyDirectoryHandler
     DEFAULT_PORT = 8000
     DEFAULT_DIRECTORY = "."
     DEFAULT_HOST = "0.0.0.0"
@@ -217,6 +217,11 @@ class EasyHTTPServer:
         exit(1)
 
 
+class EasyHTTPServerUpload(EasyHTTPServer):
+    DEFAULT_HANDLER_CLASS = UploadPrettyDirectoryHandler
+
+
 if __name__ == "__main__":
-    srv = EasyHTTPServer()
+    # srv = EasyHTTPServer()
+    srv = EasyHTTPServerUpload()
     srv.start()

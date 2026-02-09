@@ -1,7 +1,6 @@
 import cgi
 import os
 from abc import ABCMeta, abstractmethod
-from html import escape
 
 
 class _AbcDirectoryHandler(metaclass=ABCMeta):
@@ -96,12 +95,10 @@ class UploadHandlerMixin(_UploadInfoCheck, metaclass=ABCMeta):
         self.logger = None
 
     def _get_upload_success_msg(self, filename, data_len: int):
-        return f'success uploading {escape(filename)} ({data_len} bytes) to {self.path}'
-        # msg = self.wrap_success_paragraph(f"Uploaded {escape(filename)} ({data_len} bytes)")
+        ...
 
     def _get_upload_fail_msg(self, exception):
-        return f'Upload to {self.path} failed: {escape(str(exception))}'
-        # msg = self.wrap_error_paragraph(f"Upload failed: {escape(str(exception))}")
+        ...
 
     def _handle_upload_failed(self, exception, **kwargs):
         self._get_and_log_upload_fail_type(exception, **kwargs)

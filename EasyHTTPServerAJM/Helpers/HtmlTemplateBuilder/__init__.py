@@ -12,7 +12,7 @@ def is_frozen() -> bool:
 
 
 from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder.template_asset_helper import AssetHelper
-
+from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder.mixins import FormatDirectoryEntryMixin
 from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder.template_wrappers import TableWrapperHelper, HTMLWrapperHelper
 from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder.html_template_builder import (HTMLTemplateBuilder,
                                                                                  HTMLTemplateBuilderUpload)

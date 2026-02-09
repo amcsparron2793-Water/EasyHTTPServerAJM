@@ -87,10 +87,10 @@ class UploadPrettyDirectoryHandler(PrettyDirectoryHandler, UploadHandlerMixin):
         kwargs['html_template_builder_class'] = HTMLTemplateBuilderUpload
         super().__init__(request, client_address, server, **kwargs)
 
-    # noinspection PyProtectedMember
+    # noinspection PyProtectedMember,PyUnresolvedReferences
     def _get_upload_success_msg(self, filename, data_len: int):
         return self.template_builder._get_upload_success_msg(filename, data_len)
 
-    # noinspection PyProtectedMember
+    # noinspection PyProtectedMember,PyUnresolvedReferences
     def _get_upload_fail_msg(self, exception):
         return self.template_builder._get_upload_fail_msg(exception)

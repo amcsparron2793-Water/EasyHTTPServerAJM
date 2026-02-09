@@ -4,8 +4,9 @@ from pathlib import Path
 from string import Template
 from typing import Optional, Union
 
-from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder import AssetHelper, TableWrapperHelper, HTMLWrapperHelper
-from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder.mixins import FormatDirectoryEntryMixin
+from EasyHTTPServerAJM.Helpers import GetUploadSize
+from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder import (AssetHelper, TableWrapperHelper, HTMLWrapperHelper,
+                                                           FormatDirectoryEntryMixin)
 
 
 class HTMLTemplateBuilder(AssetHelper, FormatDirectoryEntryMixin, TableWrapperHelper):
@@ -129,8 +130,8 @@ class HTMLTemplateBuilder(AssetHelper, FormatDirectoryEntryMixin, TableWrapperHe
 
 class HTMLTemplateBuilderUpload(HTMLTemplateBuilder, HTMLWrapperHelper):
     def _get_upload_success_msg(self, filename, data_len: int):
-        msg = self.wrap_success_paragraph(f"Uploaded {escape(filename)} ({data_len} bytes)")
-        return msg
+        data_len_str = GetUploadSize.conversion_to_str('auto_convert', data_len)
+        return self.wrap_success_paragraph(f'Uploaded {escape(filename)} ({data_len_str})')
 
     def _get_upload_fail_msg(self, exception):
         msg = self.wrap_error_paragraph(f"Upload failed: {escape(str(exception))}")

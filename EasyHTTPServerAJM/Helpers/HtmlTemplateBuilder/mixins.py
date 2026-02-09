@@ -1,16 +1,23 @@
 import os
 from html import escape
-from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder import TableWrapperHelper
+# long form to prevent circular import
+from EasyHTTPServerAJM.Helpers.HtmlTemplateBuilder.template_wrappers import TableWrapperHelper
 
 
 class FormatDirectoryEntryMixin(TableWrapperHelper):
-    @staticmethod
-    def _get_file_stats(file_path):
-        stats = os.stat(file_path)
-        from datetime import datetime
-        file_stats = {'access_time': datetime.fromtimestamp(stats.st_atime).ctime(),
-                      'modified_time': datetime.fromtimestamp(stats.st_mtime).ctime(),
-                      'created_time': datetime.fromtimestamp(stats.st_ctime).ctime()}
+    DEFAULT_FILE_STATS = {'access_time': 'unknown',
+                          'modified_time': 'unknown',
+                          'created_time': 'unknown'}
+
+    def _get_file_stats(self, file_path):
+        if os.path.exists(file_path):
+            from datetime import datetime
+            stats = os.stat(file_path)
+            file_stats = {'access_time': datetime.fromtimestamp(stats.st_atime).ctime(),
+                          'modified_time': datetime.fromtimestamp(stats.st_mtime).ctime(),
+                          'created_time': datetime.fromtimestamp(stats.st_ctime).ctime()}
+        else:
+            file_stats = self.__class__.DEFAULT_FILE_STATS
         return file_stats
 
     def _format_file_entry_stats(self, file_path):
