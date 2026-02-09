@@ -84,7 +84,7 @@ class PrettyDirectoryHandler(SimpleHTTPRequestHandler):
 
 class UploadPrettyDirectoryHandler(PrettyDirectoryHandler, UploadHandlerMixin):
     def __init__(self, request: socket.SocketType, client_address, server: BaseServer, **kwargs):
-        kwargs['html_template_builder_class'] = HTMLTemplateBuilderUpload
+        kwargs['html_template_builder_class'] = kwargs.pop('html_template_builder_class', HTMLTemplateBuilderUpload)
         super().__init__(request, client_address, server, **kwargs)
 
     # noinspection PyProtectedMember,PyUnresolvedReferences
